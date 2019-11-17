@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MMOSPr", "MMOSPr\MMOSPr.vcxproj", "{8D76B47B-D85D-4F46-8240-6C4F25D33302}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Debug|x64.ActiveCfg = Debug|x64
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Debug|x64.Build.0 = Debug|x64
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Debug|x86.ActiveCfg = Debug|Win32
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Debug|x86.Build.0 = Debug|Win32
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Release|x64.ActiveCfg = Release|x64
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Release|x64.Build.0 = Release|x64
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Release|x86.ActiveCfg = Release|Win32
+		{8D76B47B-D85D-4F46-8240-6C4F25D33302}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8207FEB1-7641-40C0-B0C3-3AEE74FFC4A9}
+	EndGlobalSection
+EndGlobal
