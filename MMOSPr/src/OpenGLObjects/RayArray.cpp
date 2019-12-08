@@ -1,21 +1,26 @@
 #include "RayArray.h"
 
-RayArray::RayArray(glm::vec4 position, glm::vec4 e, unsigned int count, double radius)
-	: _position{ position }, _e{ e }
-{
-	_rays.resize(count);
+void RayArray::initRays() {
+	_rays.clear();
+	_rays.resize(_c);
 	float M_PI = 3.14f;
 	std::uniform_real_distribution<float> distAlpha(-M_PI, M_PI);
-	std::uniform_real_distribution<float> distRadius(0, radius);
+	std::uniform_real_distribution<float> distRadius(0, _r);
 	std::default_random_engine generator;
 	float y{}, z{};
 
-	for (int i = 0; i < count; i++) {
+	for (int i = 0; i < _c; i++) {
 		y = distRadius(generator) * std::cos(distAlpha(generator));
 		z = distRadius(generator) * std::sin(distAlpha(generator));
 
-		_rays[i] = Ray({ _position.x, _position.y + y, _position.z + z, 1.f }, e, 0.2f);
+		_rays[i] = Ray({ _position.x, _position.y + y, _position.z + z, 1.f }, _e, 0.2f);
 	}
+}
+
+RayArray::RayArray(glm::vec4 position, glm::vec4 e, unsigned int count, float radius)
+	: _position{ position }, _e{ e }, _c{ count }, _r{ radius }
+{
+	initRays();
 }
 
 RayArray::RayArray()
@@ -32,6 +37,16 @@ Ray& RayArray::operator()(unsigned int i)
 unsigned int RayArray::size() const noexcept
 {
 	return _rays.size();
+}
+
+void RayArray::setR(double r) {
+	_r = r;
+	initRays();
+}
+
+void RayArray::setCount(double count) {
+	_c = count;
+	initRays();
 }
 
 void RayArray::init() {
@@ -60,7 +75,7 @@ void RayArray::init() {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 	_indexBuffer.init(_indexData.data(), _indexData.size());
-
+ 
 	glBindVertexArray(0);
 }
 
@@ -75,4 +90,13 @@ void RayArray::push_back(Ray ray) {
 
 void RayArray::clear() {
 	_rays.clear();
+}
+
+void RayArray::scatterPlot(const std::string filename, double distance) {
+
+	std::ofstream outStream(filename.c_str());
+
+	for (int i = 0; i < _rays.size(); i++) {
+		outStream << _rays[i].r().y << " " << _rays[i].r().z << std::endl;
+	}
 }

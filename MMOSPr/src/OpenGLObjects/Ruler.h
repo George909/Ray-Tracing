@@ -1,11 +1,10 @@
 #pragma once
-#include "Object.h"
 #include <gl/glew.h>
 #include <vector>
 #include "../OpenGL/IndexBuffer.h"
 #include "../OpenGL/VertexBuffer.h"
 
-class Ruler : public Object {
+class Ruler {
 private:
 	float _lenght;
 	float _ratio;
@@ -21,8 +20,8 @@ public:
 	Ruler();
 	Ruler(float lenght, float ratio, int countOfDivisions);
 
-	virtual void draw() override;
-	virtual void init() override;
+	virtual void draw() ;
+	virtual void init() ;
 
 	~Ruler();
 };

@@ -43,7 +43,7 @@ float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f;  	// Time of last frame
 
 float calculateFocus(RayArray& rays, Lense& lense);
-//void calculateLens(float focus ){}
+void calculateLens(float focus);
 int main() {
 	GLFWwindow* window;
 	if (!glfwInit()) return -1;
@@ -77,7 +77,7 @@ int main() {
 	RayArray rays;
 	rays = RayArray({ -2.f, 0.f, 0.f, 1 }, 
 									{ 1.f, 0.f, 0.f, 0.f }, 
-															 800, 0.3f);
+															 100, 0.3f);
 
 	Lense lense(0.4f, 1.5, 1.5, 0.5f, 1.5, 1.5, 0.25f, 1.f, 1.5f);
 	Ruler ruler(5, 0.1, 20);
@@ -101,20 +101,20 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	
-	float a1{ 0.4f }, a2{ 0.5f }, b1{ 1.5f }, b2{ 1.5f }, d{ 0.25f }, focus{};
-
+	float a1{ 0.4f }, a2{ 0.5f }, b1{ 1.5f }, b2{ 1.5f }, d{ 0.25f }, focus{}, radius{0.3}, count{100};
+	char* filename;
 	while (!glfwWindowShouldClose(window)) {
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		// Lense and Rays
 		{
 			static float f = 0.0f;
 			static int counter = 0;
 
-			ImGui::Begin("Interface");                          
-
-		           
+			ImGui::Begin("Lense and Rays");                          
+  
 			ImGui::Checkbox("Interactive", &interactive);
 		
 			ImGui::InputFloat("a1", &a1);
@@ -122,13 +122,17 @@ int main() {
 			ImGui::InputFloat("a2", &a2);
 			ImGui::InputFloat("b2", &b2);
 			ImGui::InputFloat("Distance", &d);
+			ImGui::InputFloat("Count", &count);
+			ImGui::InputFloat("Radius", &radius);
 
-			if (ImGui::Button("Button")) {
+			if (ImGui::Button("Refresh")) {
 				lense.setA1(a1);
 				lense.setA2(a2);
 				lense.setB1(b1);
 				lense.setB2(b2);
 				lense.setDistance(d);
+				rays.setCount(count);
+				rays.setR(radius);
 				inRays.clear();
 				outRays.clear();
 				lense.refraction(rays, inRays, outRays);
@@ -142,11 +146,59 @@ int main() {
 			}
 
 			if (ImGui::Button("Calculate focus")) {
-				focus = calculateFocus(outRays, lense);
-				outRays.init();
+				focus = lense.calculateFocus();
+				for (int i = 0; i < outRays.size(); i++) {
+					Plane focusPlane({ focus,0,0,1 }, {1,0,0,0});
+					outRays(i).setT(focusPlane.intersectionPoint(outRays(i)));
+					outRays.init();
+				}
 			}
-			ImGui::Text("Focus : %.3f ", focus);				
+
+			if (ImGui::Button("Scatter Plot")) {
+				outRays.scatterPlot("ScatterPlot", focus);
+			}
+
+			ImGui::Text("Focus : %.5f ", focus);				
 			ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::End();
+		} 
+		// Calclate Lense
+		{
+			ImGui::Begin("Calculate Lense");
+			static float a1_lb{ 0.2f }, a1_rb{ 0.6f }, b1_lb{ 1.2f }, b1_rb{ 1.8f }, 
+									 a2_lb{ 0.2f }, a2_rb{ 0.6f }, b2_lb{ 1.2f }, b2_rb{ 1.8f }, 
+									 d_lb{ 0.1f }, d_rb{ 0.4f }, f{ 1.486f };
+			ImGui::InputFloat("Focus", &f);
+			ImGui::InputFloat("Left Border a1", &a1_lb);
+			ImGui::InputFloat("Right Border a1", &a1_rb);
+			ImGui::InputFloat("Left Border b1", &b1_lb);
+			ImGui::InputFloat("Right Border b1", &b1_rb);
+			ImGui::InputFloat("Left Border a2", &a2_lb);
+			ImGui::InputFloat("Right Border a2", &a2_rb);
+			ImGui::InputFloat("Left Border b2", &b2_lb);
+			ImGui::InputFloat("Right Border b2", &b2_rb);
+			ImGui::InputFloat("Left Border d", &d_lb);
+			ImGui::InputFloat("Right Border d", &d_rb);
+
+			if (ImGui::Button("Calculate")) {
+				lense.calculateLense(f, a1_lb, a1_rb, b1_lb, b1_rb, a2_lb, a2_rb, b2_lb, b2_rb, d_lb, d_rb);
+				inRays.clear();
+				outRays.clear();
+				lense.refraction(rays, inRays, outRays);
+				for (int i = 0; i < outRays.size(); i++) {
+					outRays(i).setT(10);
+				}
+				rays.init();
+				inRays.init();
+				outRays.init();
+				lense.init();
+
+				a1 = lense.getA1();
+				b1 = lense.getB1();
+				a2 = lense.getA2();
+				b2 = lense.getB2();
+				d = lense.getDistance();
+			}
 			ImGui::End();
 		}
 		// Rendering
@@ -210,20 +262,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 float calculateFocus(RayArray& rays, Lense& lense) {
-	Plane plane({ lense.getDistance1(), 0, 0, 1 }, {-1, 0, 0,0});
+	Plane plane({ lense.getDistance1(), 0, 0, 1 }, {1, 0, 0,0});
 
 	double currentMSE{};
 	double lastMSE = std::numeric_limits<double>::max();
-	double step = lense.getDistance() / 10;
+	double step = lense.getDistance() / 100;
 	double currentStep = lense.getDistance2();
 	double t{};
 	double li{};
-	double minMSE=1000;
+	double minMSE = std::numeric_limits<double>::max();
 	
 	for ( ;currentStep < 10 ; currentStep += step) {
 		plane.setR0({ currentStep, 0, 0, 1 });
 		for (int i = 0; i < rays.size(); i++) {
-
 			t = plane.intersectionPoint(rays(i));
 			rays(i).setT(t);
 		}
@@ -232,6 +283,11 @@ float calculateFocus(RayArray& rays, Lense& lense) {
 			currentMSE += std::sqrt((rays(i).r().y * rays(i).r().y + rays(i).r().z * rays(i).r().z ) / rays.size());
 		}
 		if (lastMSE < currentMSE) {
+			plane.setR0({ currentStep - step, 0, 0, 1 });
+			for (int i = 0; i < rays.size(); i++) {
+				t = plane.intersectionPoint(rays(i));
+				rays(i).setT(t);
+			}
 			return currentStep - step;
 		}
 		lastMSE = currentMSE;
@@ -239,6 +295,10 @@ float calculateFocus(RayArray& rays, Lense& lense) {
 	}
 	//std::cout << minMSE;
 	//return minMSE;
+}
+
+void calculateLens(float focus) {
+
 }
 
 

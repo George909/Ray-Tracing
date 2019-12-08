@@ -1,9 +1,10 @@
 #pragma once
-#include "Object.h"
+
 #include "../OpenGL/IndexBuffer.h"
 #include "../OpenGL/VertexBuffer.h"
 
 #include "../GeometricOptic/Ray.h"
+#include "../GeometricOptic/Plane.h"
 #include "RayArray.h"
 
 #include <gl/glew.h>
@@ -14,7 +15,7 @@
 #include <algorithm>
 
 
-class Lense : public Object {
+class Lense {
 
 private:
 	std::vector<float> _surfaceVertexData_1;
@@ -31,23 +32,20 @@ private:
 
 	float _a_1;
 	float _b_1;
-	float _c_1;
 	float _a_2;
 	float _b_2;
-	float _c_2;
-
-	float _r_1;
-	float _r_2;
 
 	float _distance;
 	float _distance1;
 	float _distance2;
+	float _height;
 
 	glm::vec4 _r0_1;
 	glm::vec4 _r0_2;
 	float _n1;
 	float _n2;
-	float _height;
+	float _f;
+	float _mse;
 
 	void calculateData();
 	glm::vec4 n1(Ray& ray);
@@ -62,7 +60,6 @@ private:
 
 public:
 
-	Lense(float r_1, float r_2, float distance, float n1, float n2);
 	Lense(float a_1, float b_1, float c_1, float a_2, float b_2, float c_2, float distance, float n1, float n2);
 
 	void refraction(RayArray& rayArray, RayArray& inRays, RayArray& outRays);
@@ -76,8 +73,20 @@ public:
 	float getDistance1();
 	float getDistance2();
 	float getDistance();
+	float getA1();
+	float getA2();
+	float getB1();
+	float getB2();
 
-	// Унаследовано через Object
-	virtual void draw() override;
-	virtual void init() override;
+	void calculateLense(float focus, 
+											float lb_a1, float rb_a1, 
+											float lb_b1, float rb_b1, 
+											float lb_a2, float rb_a2, 
+											float lb_b2, float rb_b2, 
+											float lb_distance, float rb_distance);
+	float calculateFocus();
+
+	// Унаследовано через Objec
+	virtual void draw();
+	virtual void init();
 };
